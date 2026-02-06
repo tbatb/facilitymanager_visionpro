@@ -245,14 +245,6 @@ This project is developed for academic purposes as part of a bachelor thesis at 
 
 ---
 
-## Author
-
-**Tegshbayar Batbayar**  
-Bachelor of Science Candidate  
-Technische Universität Wien
-
----
-
 ##  Acknowledgments
 
 - TU Wien Institute of Management Science
