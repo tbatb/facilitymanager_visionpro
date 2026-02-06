@@ -10,7 +10,7 @@
 > **Bachelor Thesis Project** | Technische Universität Wien  
 > *Augmented Reality-Driven Decision Support Systems: Applications in Maintenance and Quality Management*
 
-## 📋 Overview
+## Overview
 
 This application is a functional prototype developed for the **Apple Vision Pro** that demonstrates how Augmented Reality can serve as a cognitive tool for industrial maintenance operations. Built as part of a Design Science Research (DSR) methodology, the system integrates **Fault Tree Analysis (FTA)** directly into a spatial computing environment to assist "Operator 4.0" in diagnosing complex Cyber-Physical System failures.
 
@@ -25,38 +25,38 @@ Traditional automated alerts miss these failures. This AR-DSS bridges the gap be
 
 ---
 
-## ✨ Features
+## Features
 
-### 🏢 Facility Dashboard
+### Facility Dashboard
 - Real-time overview of all Fan Coil Units (FCUs)
 - Visual status indicators (Online, Maintenance Scheduled, Critical Fault)
 - One-tap navigation to unit-specific maintenance workflows
 
-### 📊 Analytics Dashboard
+### Analytics Dashboard
 - Fleet health metrics and KPIs
 - Unit status breakdown with visual bar charts
 - Most repaired units ranking
 - Recent maintenance activity feed
 - Maintenance type distribution analysis
 
-### 🔧 Guided Maintenance Workflows
+### Guided Maintenance Workflows
 - **Critical Fault Resolution**: FTA-based diagnostics for "Logic Trap" detection
 - **Scheduled Maintenance**: Task checklist with progress tracking
 - **Actuator Replacement**: Step-by-step AR-guided procedure
 
-### 📈 Live Unit Statistics
+### Live Unit Statistics
 - Real-time simulated sensor data (RPM, Power, Temperature, Airflow)
 - Animated value transitions for monitoring
 - Maintenance history tracking
 
-### ✅ Maintenance Completion
+### Maintenance Completion
 - Outcome selection (Resolved / Schedule Follow-up)
 - Automatic status updates to facility registry
 - Maintenance record logging
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -89,7 +89,7 @@ Traditional automated alerts miss these failures. This AR-DSS bridges the gap be
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 facilitymanager_visionpro/
@@ -122,7 +122,7 @@ facilitymanager_visionpro/
 
 ---
 
-## 🔬 Core Algorithms
+## Core Algorithms
 
 ### Logic Trap Detection (from FCUModel.swift)
 
@@ -154,7 +154,7 @@ The guided workflow follows a deterministic finite state machine:
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
