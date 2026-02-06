@@ -211,7 +211,7 @@ The prototype models a **vertical four-pipe hydronic Fan Coil Unit (FCU)** based
 
 ---
 
-## 📚 Academic Context
+## Academic Context
 
 This project was developed as part of a Bachelor Thesis at:
 
