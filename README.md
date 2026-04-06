@@ -1,109 +1,165 @@
-# AR-DSS: Augmented Reality-Driven Decision Support System for FCU Maintenance
+# AR-DSS: When Your HVAC System Lies to Itself
 
-A visionOS application built for Apple Vision Pro that assists HVAC maintenance technicians with fault diagnosis and guided repair workflows for Fan Coil Units (FCUs). Developed as the practical artifact for a bachelor thesis at TU Wien.
+**An Apple Vision Pro application that catches the faults your Building Management System misses.**
 
+Built for visionOS in Swift/SwiftUI. Developed as a bachelor thesis artifact at TU Wien.
 
-## About
+---
 
-This application implements an AR-Driven Decision Support System (AR-DSS) that combines Fault Tree Analysis (FTA) with step-by-step repair procedures to help maintenance operators diagnose and resolve faults in four-pipe hydronic Fan Coil Units. Rather than relying on intuition or manual cross-referencing of BMS (Building Management System) dashboards, the system provides structured, transparent diagnostic reasoning and guided workflows directly in the operator's field of view.
+## The Problem This Solves
 
-The project was developed as part of the bachelor thesis "Augmented Reality-Driven Decision Support Systems: Applications in Maintenance and Quality Management" at the Institute of Management Science, Technische Universitat Wien, supervised by Univ.-Prof. Dr.-Ing. Fazel Ansari and Dr. Sara Elisabeth Scheffer.
+A four-pipe Fan Coil Unit reports a room temperature of 19.96 degrees C. The setpoint is 21.00 degrees C. The controller does exactly what it should: it closes the cooling valve. Logical.
 
+Except the room is actually 24.47 degrees C.
 
-## Problem Statement
+The control sensor is wrong. The algorithm is right. The building is overheating. And the BMS dashboard shows nothing out of the ordinary -- because from the software's perspective, everything is working perfectly.
 
-Modern HVAC systems produce complex failure scenarios where control software operates correctly based on incorrect inputs -- so-called "Logic Traps." Traditional BMS dashboards present raw data without diagnostic context, forcing technicians to manually correlate values across multiple screens. This application addresses three core problems identified in the thesis:
+This is a **Logic Trap**: valid software logic operating on invalid data. Standard automated alerts will never catch it. A technician staring at the BMS dashboard might not catch it either, because every value looks internally consistent. You only see the problem when you compare what the system *believes* against what is *physically happening*.
 
-- P1 -- Insufficient context-aware information availability during maintenance tasks
-- P2 -- Limited integration of structured decision-making techniques in existing AR maintenance tools
-- P3 -- Inefficient capture and reuse of maintenance knowledge across service activities
-
-
-## Features
-
-### Facility Dashboard
-
-The main view displays all registered FCU units in a grid layout. Each unit card shows its room ID, name, current status (Online, Critical Fault, or Maintenance Planned), and the active fault type if one exists. Units are color-coded by status for quick visual triage.
-
-### Fault Simulation
-
-Any unit can be set to a faulty state directly from the dashboard. Tapping "Simulate Fault" below a unit card opens a sheet listing all 13 fault types from the Fault Tree Analysis, organized by branch. Selecting a fault sets the unit to Critical Fault status and assigns the corresponding diagnostic data. A "Clear" button resets the unit to Online.
-
-### Fault Tree Browser
-
-The Fault Tree tab provides a complete interactive view of the diagnostic hierarchy derived from Figure 4.3 of the thesis. The top event ("Room Temperature > 22 C") connects via an OR gate to four branches:
-
-- B1 Actuator/Control Failure (4 fault types)
-- B2 Software Failure (3 fault types)
-- B3 Mechanical/HVAC Failure (4 fault types)
-- B4 Sensor/Data Problem (2 fault types)
-
-Each branch can be expanded to show its fault nodes. Faults that are currently active on any unit display the affected unit's room ID as a badge directly on the fault node. Expanding a fault node shows the diagnostic summary, repair step count, and a list of affected units with their names and types.
+This application was built to make that comparison automatic, visible, and actionable.
 
 
+## What It Does
+
+AR-DSS is a decision support system for HVAC maintenance operators. It runs on Apple Vision Pro and provides three things that traditional BMS dashboards do not: transparent diagnostic reasoning, guided repair procedures, and structured maintenance workflows.
+
+The system manages a facility of Fan Coil Units. Each unit has a live status, and any unit can be set to one of 13 fault conditions drawn directly from a Fault Tree Analysis. When a fault is active, the application shows the operator exactly *why* the system thinks something is wrong -- not just *that* something is wrong -- by displaying the full fault tree path from the top event down to the root cause. It then walks the operator through a step-by-step repair procedure specific to that fault.
+
+No tab switching. No guesswork. No reliance on the technician happening to remember the right troubleshooting sequence.
 
 
-### Fault Diagnostics
+## The Fault Tree
 
-When a unit with an active fault is opened, the Diagnostics tab displays the full fault tree path (e.g., "B2 -> G1 Logic Trap -> Q1 Data Conflict"), the branch classification, a diagnostic analysis explaining the failure mechanism, and the recommended repair procedure. For units without a programmatically assigned fault, the view falls back to the original Logic Trap detection overlay that compares live BMS values.
+The diagnostic engine is built on a complete Fault Tree Analysis for FCU temperature anomalies. The top event -- room temperature exceeding 22 degrees C -- branches through an OR gate into four failure categories, each containing specific fault types:
 
-### Guided Repair Workflows
+**B1 -- Actuator/Control Failure:**
+Actuator stuck (mechanical jamming), valve fault (seal failure), no 24V AC supply (power loss), actuator motor damaged (burnout).
 
-The Repair tab loads fault-specific step-by-step procedures. Each of the 13 fault types has its own repair sequence (6 to 8 steps), including instructions for actuator unjamming, valve reseating, 24V power restoration, fan motor replacement, filter replacement, coil cleaning, pump servicing, sensor recalibration, firmware rollback, and controller reconfiguration. Steps are presented one at a time with an SF Symbol icon, a progress bar, and Previous/Next navigation. The final step replaces the Next button with "Complete Maintenance" to proceed directly to outcome logging.
+**B2 -- Software Failure:**
+Logic trap (sensor-controller data conflict), configuration mismatch (wrong parameters), firmware update failure (corrupted controller).
+
+**B3 -- Mechanical/HVAC Failure:**
+Fan fault (motor failure), filter clogged (airflow restriction), coil fouling (scale/corrosion buildup), pump malfunction (no circulation).
+
+**B4 -- Sensor/Data Problem:**
+Calibration drift (readings offset beyond tolerance), sensor signal loss (wiring fault or hardware failure).
+
+Each of these 13 faults carries a full diagnostic description, a fault tree path string, and a step-by-step repair procedure with 6 to 8 detailed instructions.
+
+The Fault Tree Browser tab renders this entire hierarchy as an interactive, expandable view. Faults that are currently active on any unit show the affected unit's room ID directly on the tree node -- so you can see at a glance which parts of your failure space are currently occupied.
+
+
+## How It Works
+
+### Dashboard
+
+Six simulated FCU units are displayed in a grid. Each card shows the unit's room ID, name, type, status, and active fault (if any). Below each card, a "Simulate Fault" button opens the full fault catalog so you can assign any of the 13 fault types to any unit. A "Clear" button resets it.
+
+### Diagnostics
+
+Tapping a unit in Critical Fault state opens the diagnostics view. If the unit has an assigned fault, the view displays the fault tree path (e.g., "B1 -> C3 Actuator Stuck -> D2 Mechanical Jamming"), the branch classification, a plain-language diagnostic analysis explaining the failure mechanism, and the recommended repair procedure. If no fault is programmatically assigned, it falls back to the original Logic Trap detector that compares live BMS sensor values in real time.
+
+### Guided Repair
+
+The Repair tab loads the correct procedure for the active fault. Steps are presented one at a time -- icon, instruction text, progress bar, Previous/Next navigation. On the final step, the Next button is replaced with "Complete Maintenance," which opens the outcome logger directly. No searching for the right tab. No context switching.
 
 ### Scheduled Maintenance
 
-Units with Maintenance Planned status open into a task checklist view with tasks specific to the unit's FCU type. Tasks can be expanded for detailed instructions and marked as done individually, with a progress bar tracking completion. When all tasks are complete, a "Complete Maintenance" button appears inline. A separate Reschedule tab allows changing the planned maintenance date via a graphical date picker.
+Units in Maintenance Planned status open into a task checklist tailored to the unit's FCU type (4-pipe hydronic gets different tasks than a VRF split unit). Tasks expand to show detailed instructions and can be marked done individually. A progress bar tracks completion. When all tasks are finished, an inline "Complete Maintenance" button appears right there in the task list. A separate Reschedule tab lets you change the planned date with a graphical picker.
 
-### Maintenance Completion
+### Completion and Recording
 
-After finishing a repair or scheduled maintenance, the completion view offers two outcomes: marking the unit as resolved (status returns to Online, fault is cleared) or booking further maintenance (status set to Maintenance Planned with a selected follow-up date via date picker). All outcomes are logged as maintenance records.
+Every maintenance session ends with an outcome choice: mark the unit as resolved (clears the fault, sets status to Online) or book a follow-up (sets a date, moves status to Maintenance Planned). Both outcomes are logged as maintenance records with timestamps, types, and technician identifiers.
 
-### Analytics Dashboard
+### Analytics
 
-The Analytics tab provides facility-wide metrics including fleet health percentage, total repairs, cumulative downtime, and average repair time. It also shows a per-unit repair ranking and recent maintenance history.
-
-### Live Unit Stats
-
-Online units display simulated real-time telemetry including fan RPM, power consumption, temperature, and airflow rate, with values that update every two seconds.
+The Analytics tab computes fleet-wide metrics in real time: percentage of units online, total repair count, cumulative downtime hours, average repair duration. It ranks units by repair frequency and shows recent maintenance history.
 
 
 ## Architecture
 
-The application is built entirely in Swift and SwiftUI, targeting visionOS. There is no external backend -- all data is held in memory via a singleton registry.
-
-### Source Files
+Pure Swift/SwiftUI targeting visionOS. No backend, no network calls, no database. All state lives in a singleton registry in memory.
 
 ```
-FCUMaintenanceApp.swift          App entry point, single WindowGroup with DashboardView
-DashboardView.swift              Main tab container (Units, Fault Tree, Analytics), unit grid,
-                                 fault picker sheet, unit card component
-FaultCatalog.swift               FaultType enum (13 faults), MaintenanceStep struct,
-                                 ProcedureModel class, repair step definitions
-FaultTreeBrowserView.swift       Interactive fault tree hierarchy with live affected-unit badges
-FCURegistry.swift                FanCoilUnit class, UnitStatus/MaintenanceOutcome enums,
-                                 FCURegistry singleton, MaintenanceTask, MaintenanceRecord
-FCUModel.swift                   BMS data simulation and Logic Trap detection algorithm
-UnitMaintenanceContainer.swift   Critical fault flow: diagnostics + repair + completion
-ScheduledMaintenanceContainer.swift  Scheduled maintenance: task checklist + reschedule + completion
-MaintenanceCompleteView.swift    Outcome selection (resolve or schedule follow-up) with date picker
-MaintenanceOverlayView.swift     Original Logic Trap overlay with live BMS data display
-AnalyticsDashboardView.swift     Facility analytics and maintenance history
-UnitStatsView.swift              Live telemetry display for online units
-AppModel.swift                   App-wide state for immersive space management
-ImmersiveView.swift              RealityKit immersive space (scaffold for future AR content)
-ToggleImmersiveSpaceButton.swift Toggle control for immersive space
+FCUMaintenanceApp.swift             Entry point. Single WindowGroup launching DashboardView.
+
+DashboardView.swift                 Three-tab container (Units, Fault Tree, Analytics).
+                                    Unit grid with fault simulation buttons and picker sheet.
+
+FaultCatalog.swift                  The core diagnostic data. FaultType enum with 13 cases,
+                                    each carrying fault path, diagnostic summary, icon, color,
+                                    and a complete array of MaintenanceStep repair instructions.
+                                    Also contains MaintenanceStep struct and ProcedureModel class.
+
+FaultTreeBrowserView.swift          Interactive fault tree hierarchy. Expandable branches,
+                                    live affected-unit badges, per-fault diagnostic detail.
+
+FCURegistry.swift                   FanCoilUnit model (ObservableObject with published status,
+                                    activeFault, scheduledMaintenanceDate). FCURegistry singleton
+                                    holding six units, maintenance history, and computed analytics.
+
+FCUModel.swift                      BMS data simulator and Logic Trap detection algorithm.
+                                    Implements the core diagnostic logic from Algorithm 1.
+
+UnitMaintenanceContainer.swift      Critical fault workflow container. Tabs for fault diagnostics
+                                    (FaultDiagnosticsView) and guided repair (RepairWorkflowView).
+                                    Triggers completion sheet on final repair step.
+
+ScheduledMaintenanceContainer.swift Scheduled maintenance container. Task checklist with inline
+                                    completion, reschedule date picker, and live stats tab.
+
+MaintenanceCompleteView.swift       Outcome selection: resolve (clear fault, set Online) or
+                                    schedule follow-up (date picker, set Maintenance Planned).
+                                    Logs maintenance record to registry.
+
+MaintenanceOverlayView.swift        Original Logic Trap overlay. Displays live BMS values and
+                                    highlights data conflicts between sensor and physical reality.
+
+AnalyticsDashboardView.swift        Fleet health, repair rankings, downtime totals, history.
+
+UnitStatsView.swift                 Live telemetry for online units (RPM, watts, temp, airflow).
+
+AppModel.swift                      App-wide state for immersive space management.
+ImmersiveView.swift                 RealityKit immersive space scaffold.
+ToggleImmersiveSpaceButton.swift    Immersive space toggle control.
 ```
-
-### Data Model
-
-`FanCoilUnit` is an `ObservableObject` with published properties for `status`, `activeFault`, and `scheduledMaintenanceDate`. The `FCURegistry` singleton holds an array of six simulated units spanning three status categories and provides computed analytics properties. `FaultType` is a `CaseIterable` enum where each case carries its fault tree path, diagnostic summary, icon, color, and an array of `MaintenanceStep` values defining the repair procedure.
 
 ### Key Design Decisions
 
-The application uses navigation-based unit selection rather than camera-based object detection. This was a deliberate choice for the Vision Pro platform, where reliable real-time object detection of ceiling-mounted HVAC equipment proved impractical in the prototype phase. The navigation approach provides deterministic unit identification while the diagnostic logic and repair workflows remain identical to what a camera-based system would deliver.
+**Navigation over object detection.** The app identifies units by tapping cards on the dashboard, not by pointing the Vision Pro's cameras at ceiling-mounted equipment. This was a deliberate choice: reliable real-time detection of HVAC hardware proved impractical in the prototype phase. The diagnostic logic and repair workflows are identical regardless of how the unit is identified -- swapping in camera-based detection later would not change the downstream experience.
 
-Scheduled maintenance tasks use a `lazy var` cache on `FanCoilUnit` to ensure stable UUIDs across SwiftUI render cycles. Without this, the computed property would regenerate new `MaintenanceTask` instances (and new UUIDs) on every access, causing task selection and completion tracking to break.
+**Cached task UUIDs.** Scheduled maintenance tasks are generated from a computed property on FanCoilUnit based on the unit's type. Without caching, SwiftUI would regenerate new MaintenanceTask objects (with new UUIDs) on every render cycle, silently breaking task selection and completion tracking. A `lazy var` cache ensures UUIDs persist for the lifetime of the unit object.
+
+
+## Fault Catalog
+
+| ID | Fault | Branch | Steps |
+|----|-------|--------|-------|
+| C3 | Actuator Stuck | B1 Actuator/Control | 8 |
+| C2 | Valve Fault | B1 Actuator/Control | 8 |
+| C4 | No 24V AC Supply | B1 Actuator/Control | 7 |
+| E1 | Actuator Motor Damaged | B1 Actuator/Control | 8 |
+| G1 | Logic Trap | B2 Software | 8 |
+| B9 | Configuration Mismatch | B2 Software | 6 |
+| S2 | Firmware Update Failure | B2 Software | 7 |
+| R4 | Fan Fault | B3 Mechanical/HVAC | 7 |
+| K3 | Filter Clogged | B3 Mechanical/HVAC | 6 |
+| B5 | Coil Fouling | B3 Mechanical/HVAC | 7 |
+| M3 | Pump Malfunction | B3 Mechanical/HVAC | 7 |
+| R1 | Calibration Issue | B4 Sensor/Data | 6 |
+| M4 | Sensor Signal Loss | B4 Sensor/Data | 7 |
+
+
+## Simulated Units
+
+| Room ID | Name | Type | Default State |
+|---------|------|------|---------------|
+| BC04H41 | Vertical Console | 4-Pipe Hydronic | Critical Fault -- Logic Trap |
+| BC04H42 | Ceiling Cassette | 2-Pipe Cooling | Online |
+| BC04H43 | Wall Split Unit | Refrigerant VRF | Maintenance Planned |
+| BC04H44 | Horizontal Ceiling | 4-Pipe Hydronic | Critical Fault -- Actuator Stuck |
+| BC04H45 | Ducted Concealed | 4-Pipe Hydronic | Online |
+| BC04H46 | Floor Standing | 2-Pipe Heating | Maintenance Planned |
 
 
 ## Requirements
@@ -111,79 +167,45 @@ Scheduled maintenance tasks use a `lazy var` cache on `FanCoilUnit` to ensure st
 - Xcode 16.0 or later
 - visionOS 2.0 SDK
 - Apple Vision Pro (device or simulator)
-- macOS Sonoma 14.0 or later (for Xcode)
+- macOS Sonoma 14.0 or later
 
 
-## Building and Running
+## Getting Started
 
-1. Clone the repository
-2. Open the `.xcodeproj` file in Xcode
-3. Select the visionOS simulator or a connected Apple Vision Pro as the run destination
-4. Build and run (Cmd+R)
+```
+git clone <repository-url>
+cd thesis_visionpro_app
+open thesis_visionpro_app.xcodeproj
+```
 
-The app launches into the Facility Dashboard with six pre-configured FCU units. Two units start in Critical Fault state (BC04H41 with Logic Trap, BC04H44 with Actuator Stuck), two in Maintenance Planned state, and two Online.
+Select the visionOS simulator or a connected Apple Vision Pro. Build and run.
 
-
-## Fault Catalog Reference
-
-The following fault types are implemented, each with a complete diagnostic description and step-by-step repair procedure:
-
-| Fault ID | Fault Name | Branch | Repair Steps |
-|----------|-----------|--------|-------------|
-| C3 | Actuator Stuck | B1 Actuator/Control | 8 steps |
-| C2 | Valve Fault | B1 Actuator/Control | 8 steps |
-| C4 | No 24V AC Supply | B1 Actuator/Control | 7 steps |
-| E1 | Actuator Motor Damaged | B1 Actuator/Control | 8 steps |
-| G1 | Logic Trap | B2 Software | 8 steps |
-| B9 | Configuration Mismatch | B2 Software | 6 steps |
-| S2 | Firmware Update Failure | B2 Software | 7 steps |
-| R4 | Fan Fault | B3 Mechanical/HVAC | 7 steps |
-| K3 | Filter Clogged | B3 Mechanical/HVAC | 6 steps |
-| B5 | Coil Fouling | B3 Mechanical/HVAC | 7 steps |
-| M3 | Pump Malfunction | B3 Mechanical/HVAC | 7 steps |
-| R1 | Calibration Issue | B4 Sensor/Data | 6 steps |
-| M4 | Sensor Signal Loss | B4 Sensor/Data | 7 steps |
-
-
-## Simulated Units
-
-| Room ID | Unit Name | Type | Default Status |
-|---------|----------|------|---------------|
-| BC04H41 | Vertical Console | 4-Pipe Hydronic | Critical Fault (Logic Trap) |
-| BC04H42 | Ceiling Cassette | 2-Pipe Cooling | Online |
-| BC04H43 | Wall Split Unit | Refrigerant VRF | Maintenance Planned |
-| BC04H44 | Horizontal Ceiling | 4-Pipe Hydronic | Critical Fault (Actuator Stuck) |
-| BC04H45 | Ducted Concealed | 4-Pipe Hydronic | Online |
-| BC04H46 | Floor Standing | 2-Pipe Heating | Maintenance Planned |
+The app launches into the Facility Dashboard. Two units are already in Critical Fault state (BC04H41 with a Logic Trap, BC04H44 with a stuck actuator), two are in Maintenance Planned, and two are Online. Tap "Simulate Fault" on any unit to assign a different fault and explore the diagnostics and repair workflows.
 
 
 ## Thesis Context
 
-This application serves as the functional prototype (artifact) for a Design Science Research study. It addresses three research questions:
+This application is the functional prototype for a Design Science Research study conducted as a bachelor thesis at TU Wien. It addresses three research questions:
 
-- RQ1: To what extent do AR-based support tools enhance decision-making in industrial maintenance, specifically focusing on fault diagnosis and response time?
-- RQ2: What key features and methods in AR maintenance systems improve fault diagnosis accuracy, reduce human error, and minimize downtime?
-- RQ3: What measurable impacts do AR-based maintenance tools have on operator performance, including task completion time, error rates, and system reliability?
+**RQ1:** To what extent do AR-based support tools enhance decision-making in industrial maintenance, specifically focusing on fault diagnosis and response time?
 
-The implementation validates the thesis contributions through the Logic Trap Detection algorithm (Algorithm 1 in the thesis), the Context Recognition mechanism (Algorithm 2), the Maintenance Workflow state machine (Algorithm 3), session tracking for MTTR measurement (Algorithm 4), and analytics computation (Algorithm 5).
+**RQ2:** What key features and methods in AR maintenance systems improve fault diagnosis accuracy, reduce human error, and minimize downtime?
+
+**RQ3:** What measurable impacts do AR-based maintenance tools have on operator performance, including task completion time, error rates, and system reliability?
+
+The implementation validates the thesis through five algorithms: Logic Trap Detection (Algorithm 1), Context Recognition with Fault-Aware Routing (Algorithm 2), Interactive Maintenance Workflow with Inline Completion (Algorithm 3), Session Recording with Fault State Management (Algorithm 4), and Real-Time Analytics Computation (Algorithm 5).
+
+Full thesis: "Augmented Reality-Driven Decision Support Systems: Applications in Maintenance and Quality Management," Tegshbayar Batbayar, Technische Universitat Wien, January 2026.
 
 
 ## Limitations
 
-- All sensor data and BMS values are simulated. There is no connection to a live Building Management System.
-- The immersive AR overlay (RealityKit scene) is a scaffold. The current prototype operates as a windowed visionOS application with spatial UI rather than full AR object overlay.
-- Unit identification is navigation-based, not camera-based. A production system would use object detection or QR/NFC scanning.
-- Maintenance records and fault states are held in memory and reset when the app is relaunched.
-- Repair procedures are representative but not validated against specific manufacturer service manuals.
-
-
-## License
-
-This project was developed as an academic thesis artifact at TU Wien. See the repository for license details.
+This is a research prototype, not a production system. Sensor data is simulated -- there is no connection to a live BMS. The immersive AR overlay is a scaffold; the current prototype operates as a windowed visionOS application. Unit identification is navigation-based rather than camera-based. All state resets when the app relaunches. Repair procedures are representative but not validated against specific manufacturer service manuals.
 
 
 ## Author
 
-Tegshbayar Batbayar
+**Tegshbayar Batbayar**
 Bachelor of Science, Technische Universitat Wien
 Institute of Management Science -- Production and Quality Maintenance
+Supervised by Univ.-Prof. Dr.-Ing. Fazel Ansari and Dr. Sara Elisabeth Scheffer
