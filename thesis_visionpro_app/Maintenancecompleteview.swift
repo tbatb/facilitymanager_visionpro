@@ -1,4 +1,3 @@
-
 //
 //  MaintenanceCompleteView.swift
 //  thesis_visionpro_app
@@ -144,6 +143,7 @@ struct MaintenanceCompleteView: View {
             registry.updateStatus(for: unit, to: .online)
             unit.repairCount += 1
             unit.scheduledMaintenanceDate = nil
+            unit.activeFault = nil
         case .scheduleMaintenance:
             registry.updateStatus(for: unit, to: .maintenance)
             unit.scheduledMaintenanceDate = scheduledDate

@@ -86,13 +86,14 @@ class FanCoilUnit: Identifiable, Hashable, ObservableObject {
     var lastMaintenanceDate: Date
     var totalDowntimeHours: Double
     @Published var scheduledMaintenanceDate: Date?
+    @Published var activeFault: FaultType?
 
     // Cached tasks so UUIDs remain stable across renders
     private lazy var _scheduledTasks: [MaintenanceTask] = Self.buildTasks(for: type)
 
     init(name: String, roomID: String, type: String, status: UnitStatus, imageName: String,
          repairCount: Int = 0, lastMaintenanceDate: Date = Date(), totalDowntimeHours: Double = 0,
-         scheduledMaintenanceDate: Date? = nil) {
+         scheduledMaintenanceDate: Date? = nil, activeFault: FaultType? = nil) {
         self.name = name
         self.roomID = roomID
         self.type = type
@@ -102,6 +103,7 @@ class FanCoilUnit: Identifiable, Hashable, ObservableObject {
         self.lastMaintenanceDate = lastMaintenanceDate
         self.totalDowntimeHours = totalDowntimeHours
         self.scheduledMaintenanceDate = scheduledMaintenanceDate
+        self.activeFault = activeFault
     }
 
     // Return stable (cached) tasks — UUIDs persist for the lifetime of the object
@@ -233,9 +235,11 @@ class FCURegistry {
 
         // — Critical Fault (2) —
         FanCoilUnit(name: "Vertical Console", roomID: "BC04H41", type: "4-Pipe Hydronic", status: .criticalError, imageName: "cabinet.fill",
-                    repairCount: 7, lastMaintenanceDate: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, totalDowntimeHours: 34.0),
+                    repairCount: 7, lastMaintenanceDate: Calendar.current.date(byAdding: .day, value: -3, to: Date())!, totalDowntimeHours: 34.0,
+                    activeFault: .logicTrap),
         FanCoilUnit(name: "Horizontal Ceiling", roomID: "BC04H44", type: "4-Pipe Hydronic", status: .criticalError, imageName: "air.purifier.fill",
-                    repairCount: 4, lastMaintenanceDate: Calendar.current.date(byAdding: .day, value: -20, to: Date())!, totalDowntimeHours: 12.0),
+                    repairCount: 4, lastMaintenanceDate: Calendar.current.date(byAdding: .day, value: -20, to: Date())!, totalDowntimeHours: 12.0,
+                    activeFault: .actuatorStuck),
     ]
 
     // Simulated maintenance history for analytics
