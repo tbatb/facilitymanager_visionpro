@@ -39,7 +39,7 @@ The Fault Tree tab provides a complete interactive view of the diagnostic hierar
 - B4 Sensor/Data Problem (2 fault types)
 
 Each branch can be expanded to show its fault nodes. Faults that are currently active on any unit display the affected unit's room ID as a badge directly on the fault node. Expanding a fault node shows the diagnostic summary, repair step count, and a list of affected units with their names and types.
-![Uploading Simulator Screenshot - Apple Vision Pro - 2026-04-06 at 21.37.40.png…]()
+
 
 
 
